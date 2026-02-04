@@ -1,0 +1,52 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*.pdb
+*.so
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+pip-wheel-metadata/
+
+# Packaging / build
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Test / coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+
+# --- Jupyter / IPython ---
+.ipynb_checkpoints/
+profile_default/
+ipython_config.py
+
+# Optional: ignore notebook outputs (if you use tools that export)
+# *.nbconvert.ipynb
+
+# --- Data / artifacts (local) ---
+data/
+datasets/
+outputs/
+reports/
+logs/
+tmp/
+*.log
+
+# Models / checkpoints
+models/
+checkpoints/
+*.ckpt
+*.pth
+*.pt
