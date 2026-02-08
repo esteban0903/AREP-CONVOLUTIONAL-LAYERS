@@ -41,9 +41,25 @@ Dataset: `alexteboul/english-premier-league-logo-detection-20k-images`
 - **1.6 – Preprocesamiento**: RGB, resize, normalización y augmentations suaves.
 - **1.7 – Conclusiones**: síntesis de hallazgos y próximos pasos.
 - **2 – Baseline (sin convolución)**: modelo denso con métricas train/val.
+- **2.1 – Preparación de datos**: carga, normalización y split train/val.
+- **2.2 – Arquitectura y entrenamiento**: modelo denso base y evaluación.
 - **3 – CNN (diseño y justificación)**: decisiones de arquitectura y parámetros.
+- **3.1 – Decisiones de diseño (justificación)**: capas, kernel, stride/padding, activación, pooling.
 - **4 – Experimentos controlados**: comparación de kernels 3×3 vs 5×5.
+- **4.1 – Setup**: preparación del experimento.
+- **4.1.1 – Dataset y DataLoader**
+- **4.1.2 – Modelo y entrenamiento**
+- **4.1.3 – Ejecución del experimento**
+- **4.2 – Observaciones y trade-offs**
 - **5 – Interpretación**: sesgos inductivos y cuándo usar/no usar convoluciones.
+- **6 – Entrenamiento y exportación (SageMaker)**: entrenamiento local, exportación del modelo y evidencia del flujo en SageMaker.
+- **6.1 – Entrenamiento rápido**
+- **6.2 – Guardar el modelo**
+- **6.3 – inference.py (SageMaker PyTorch)**
+- **6.4 – Script para generar model.tar.gz**
+- **6.5 – Generar model.tar.gz**
+- **6.6 – Prueba local**
+- **6.7 – Conclusiones (prueba local)**
 
 ---
 
