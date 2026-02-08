@@ -50,3 +50,15 @@ checkpoints/
 *.ckpt
 *.pth
 *.pt
+
+# Archivos de empaquetado/artefactos
+*.tar.gz
+model.tar.gz
+
+# Cache y credenciales locales
+.cache/
+.kaggle/
+*.env
+.env
+.env.*
+.python-version

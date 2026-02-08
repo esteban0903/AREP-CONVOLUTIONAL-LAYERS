@@ -1,96 +1,147 @@
-# English Premier League Logo Detection (20K) – Dataset Exploration (EDA)
+# English Premier League Logo Detection (20K) – EDA + Modelos
 
-## Exercise Summary
+## Descripción del problema
 
-Este proyecto realiza una **exploración concisa del dataset** *English Premier League Logo Detection (20K images)* con foco en entender su estructura: **tamaño del dataset**, **distribución de clases**, **estructura de carpetas**, **dimensiones y canales de imágenes (muestreo)**, **ejemplos visuales por clase**, y **recomendaciones de preprocesamiento** (RGB, resize, normalización y augmentations).  
-El objetivo es comprensión y preparación del pipeline, no estadística exhaustiva.
+Clasificación de logos de equipos de la Premier League a partir de imágenes. El objetivo es comparar un **baseline denso** vs una **CNN** y justificar decisiones arquitectónicas con una EDA breve.
+
+---
 
 ## Introducción
 
-El objetivo de este notebook es dejar el dataset listo para entrenamiento de modelos de visión (clasificación de logos por equipo).  
+Este notebook documenta una EDA breve del dataset *English Premier League Logo Detection (20K images)*. La idea es entender cómo está organizado, cómo se distribuyen las clases y qué decisiones de preprocesamiento son necesarias antes de entrenar una CNN.
+
 Me enfoqué en:
+- Verificar la estructura de carpetas y el CSV de etiquetas.
+- Medir distribución de clases y detectar desbalance.
+- Revisar tamaños y canales de imagen.
+- Mostrar ejemplos por clase.
+- Dejar recomendaciones claras de preprocesamiento.
 
-- Entender cómo está organizada la data en disco (rutas locales vs rutas “Kaggle style” del CSV).
-- Ver si el dataset está balanceado y cuántas clases reales hay.
-- Identificar tamaños y canales típicos para definir **resize** y **normalización**.
-- Mostrar ejemplos por clase para validar que las etiquetas corresponden.
+---
 
-## Dataset Description
+## Dataset
 
 **Kaggle – English Premier League Logo Detection (20K images)**  
 Dataset: `alexteboul/english-premier-league-logo-detection-20k-images`
 
-- **Total de imágenes**: 20,000
-- **Estructura detectada**:
-  - Carpeta de imágenes: `epl-logos-big/...` (con subcarpetas por equipo)
-  - Archivo de etiquetas: `train.csv`
-- **Etiquetas**:
-  - `team_name` (string)
-  - `team` (id numérico)
-- **CSV**:
-  - **Filas**: 20,000
-  - **Columnas**: `filepath`, `team_name`, `team`
-  - Nota: `filepath` viene con ruta estilo Kaggle (`../input/...`) y se resuelve a rutas locales con la columna `local_path`.
+- **Total de imágenes:** 20,000
+- **Etiquetas:** `team_name` (string), `team` (id numérico)
+- **CSV:** `train.csv` con `filepath` (ruta estilo Kaggle). En el notebook se resuelve a rutas locales con `local_path`.
 
 ---
 
 ## Qué hay en el notebook
 
-### `EDA_DATASET_EXPLORATION.ipynb`
+### eda_dataset_exploration.ipynb
 
-#### **1.2 – Inspección de estructura del dataset**
-- Verificación de existencia del path local.
-- Listado de entradas en raíz (carpetas/archivos).
-- Búsqueda **recursiva** de imágenes (`.png/.jpg/.jpeg/...`).
-- Identificación de subcarpeta candidata con mayor cantidad de imágenes.
+- **1.2 – Inspección del dataset**: estructura de carpetas, búsqueda recursiva de imágenes y ubicación del CSV.
+- **1.3 – Distribución de clases**: comparación Top/Bottom por número de imágenes.
+- **1.4 – Dimensiones y canales**: muestreo de tamaños y modos (`RGB`, `RGBA`, etc.) con histogramas.
+- **1.5 – Ejemplos por clase**: grilla de muestras para validar coherencia visual.
+- **1.6 – Preprocesamiento**: RGB, resize, normalización y augmentations suaves.
+- **1.7 – Conclusiones**: síntesis de hallazgos y próximos pasos.
+- **2 – Baseline (sin convolución)**: modelo denso con métricas train/val.
+- **3 – CNN (diseño y justificación)**: decisiones de arquitectura y parámetros.
+- **4 – Experimentos controlados**: comparación de kernels 3×3 vs 5×5.
+- **5 – Interpretación**: sesgos inductivos y cuándo usar/no usar convoluciones.
 
-**Resultado observado:**
-- 20,000 imágenes encontradas recursivamente.
-- `train.csv` localizado en la raíz del dataset.
-- Imágenes dentro de `epl-logos-big/...` (con doble nivel `epl-logos-big/epl-logos-big/...`).
+---
 
-#### **1.3 – Distribución de clases (labels)**
-- Carga de `train.csv`.
-- Gráfica **Top N vs Bottom N** por cantidad de imágenes por clase (`team_name`).
-- Validación rápida de consistencia (si aplica): que `team_name` mapee correctamente a un `team_id`.
+## Diagrama de arquitectura (simple)
 
-Outputs principales:
-- Conteos por clase (`team_name`) y shape global del dataset (20,000 filas).
+**Baseline (denso)**
 
-#### **1.4 – Dimensiones y canales de imágenes (muestreo)**
-- Muestreo de `N` imágenes para extraer:
-  - `width`, `height`
-  - `mode` (`RGB`, `RGBA`, etc.)
-- Histogramas de distribución de ancho y alto.
-- Conteo de modos para detectar necesidad de convertir a RGB.
+```
+Imagen 96x96x3
+  ↓ Flatten
+Dense(128) → ReLU
+  ↓
+Dense(C)
+```
 
-#### **1.5 – Ejemplos por clase**
-- Grid con `K` clases (top por frecuencia) y `M` imágenes por clase.
-- Verificación visual rápida de:
-  - Calidad de imágenes
-  - Consistencia label ↔ contenido (logo del equipo)
-  - Variabilidad de fondos / tamaños / recortes
+**CNN propuesta**
 
-#### **1.6 – Recomendaciones de preprocesamiento**
-Checklist de preparación típica para entrenamiento:
-1. Convertir imágenes a **RGB** (si hay `RGBA`).
-2. **Resize** a tamaño fijo (ej: `224x224` o `256x256` según backbone).
-3. Normalización:
-   - Simple: `x / 255.0`
-   - Transfer learning (ImageNet): mean `[0.485,0.456,0.406]`, std `[0.229,0.224,0.225]`
-4. Augmentation (train): random resize/crop, flips (si aplican), color jitter leve.
-5. Split estratificado por clase.
+```
+Input 64x64x3
+→ Conv(32, 3x3) + ReLU + MaxPool(2)
+→ Conv(64, 3x3) + ReLU + MaxPool(2)
+→ Flatten → Dense(128) + ReLU → Dropout(0.3)
+→ Dense(C)
+```
+
+---
+
+## Resultados experimentales (resumen)
+
+Estos resultados se generan al ejecutar el notebook:
+
+| Experimento | Train acc | Val acc | Train loss | Val loss | Parámetros |
+|---|---:|---:|---:|---:|---:|
+| Baseline (MLP) | 0.941 | 0.868 | 0.362 | 0.628 | 3,541,652 |
+| CNN (3×3) | 0.918 | 0.888 | 0.3346 | 0.4040 | 2,119,252 |
+| CNN (5×5) | 0.890 | 0.863 | 0.3653 | 0.4252 | 2,153,556 |
+
+---
+
+## Interpretación
+
+La CNN suele rendir mejor que el baseline porque explota **localidad** y **compartición de pesos**, reduciendo parámetros y mejorando generalización. Si no supera al baseline, suele deberse a entrenamiento corto, preprocesamiento débil o muestra pequeña.
+
+---
+
+## 6. Entrenamiento, exportación y despliegue (SageMaker)
+
+En esta sección se documenta el flujo de exportación del modelo y el intento de despliegue en SageMaker. En AWS Academy no se puede crear el endpoint por restricciones de permisos, pero el artefacto `model.tar.gz` se generó correctamente y se subió a S3.
+
+**Evidencias del proceso (capturas):**
+
+**Subida del `model.tar.gz` a S3**
+
+Captura de la carga del artefacto `model.tar.gz` al bucket S3. Esto valida que el paquete del modelo quedó disponible para SageMaker.
+
+![Subida del modelo a S3](images/subirModeloaS3.png)
+
+**Creación del modelo en SageMaker (configuración)**
+
+Formulario de creación del modelo en SageMaker, indicando el nombre, framework (PyTorch) y la ruta del artefacto en S3.
+
+![Configuración del modelo en SageMaker](images/crearModeloSageMaker.png)
+
+**Modelo creado exitosamente**
+
+Pantalla de confirmación donde se visualiza el modelo registrado correctamente en SageMaker.
+
+![Modelo creado en SageMaker](images/resultadoCreacionModelo.png)
+
+**Error al intentar crear el endpoint por política explícita**
+
+Intento de despliegue del endpoint fallido por una denegación explícita en la política IAM del laboratorio de AWS Academy.
+
+![Error al crear endpoint](images/intentoCrearEndpointError.png)
+
+---
+
+## Conclusiones
+
+- Se completó el flujo local de entrenamiento, exportación y prueba; el modelo responde con una predicción válida y probabilidad alta.
+- El artefacto `model.tar.gz` es compatible con SageMaker y se pudo subir a S3.
+- La creación del endpoint falló por **restricciones de la política IAM** en AWS Academy (denegación explícita a `sagemaker:CreateEndpointConfig`).
+- Con permisos adecuados, el despliegue debería completarse sin cambios adicionales en el artefacto.
 
 ---
 
 ## Requisitos
 
-- Python 3.10+ (recomendado)
+- Python 3.10+
 - Librerías:
   - `pandas`
   - `numpy`
   - `matplotlib`
   - `Pillow`
+  - `kagglehub`
+  - `scikit-learn`
+  - `torch`
+  - `torchvision`
 
 ---
 
